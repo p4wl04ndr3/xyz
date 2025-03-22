@@ -26,7 +26,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17' # Ou a versão do seu projeto
+          java-version: '17'
 
       - name: Set up Maven
         uses: stCarolas/setup-maven@v4
@@ -53,10 +53,14 @@ jobs:
           git tag "v${{ steps.get_version.outputs.RELEASE_VERSION }}"
           git push origin --tags
 
+      - name: Fetch Main and Develop
+        run: |
+          git fetch origin main develop
+
       - name: Set Next Development Version in POM
         run: |
           mvn versions:set -DnewVersion="${{ steps.get_version.outputs.RELEASE_VERSION }}-SNAPSHOT"
           git commit -am "Set next development version to ${{ steps.get_version.outputs.RELEASE_VERSION }}-SNAPSHOT"
 
       - name: Push Changes
-        run: git push origin main develop # Ou as branches relevantes
+        run: git push origin main develop
