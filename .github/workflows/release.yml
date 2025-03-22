@@ -53,9 +53,8 @@ jobs:
           git tag "v${{ steps.get_version.outputs.RELEASE_VERSION }}"
           git push origin --tags
 
-      - name: Fetch Main and Develop
-        run: |
-          git fetch origin main develop
+      - name: Fetch All Branches
+        run: git fetch origin --all
 
       - name: Set Next Development Version in POM
         run: |
