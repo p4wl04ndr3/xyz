@@ -1,0 +1,54 @@
+name: Release Automation
+
+on:
+  push:
+    branches:
+      - 'release/*' # Dispara quando uma branch release é criada ou recebe push
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Necessário para o git describe
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17' # Ou a versão do seu projeto
+
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v4
+        with:
+          maven-version: '3.8.7'
+
+      - name: Get Release Version
+        id: get_version
+        run: |
+          RELEASE_BRANCH=$(echo "${GITHUB_REF}" | sed -e 's/^refs\/heads\/release\///')
+          RELEASE_VERSION="${RELEASE_BRANCH}"
+          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Set Release Version in POM
+        run: |
+          mvn versions:set -DnewVersion="${{ steps.get_version.outputs.RELEASE_VERSION }}"
+          git commit -am "Set release version to ${{ steps.get_version.outputs.RELEASE_VERSION }}"
+
+      - name: Run Tests and Build
+        run: mvn clean verify
+
+      - name: Create Release Tag
+        run: |
+          git tag "v${{ steps.get_version.outputs.RELEASE_VERSION }}"
+          git push origin --tags
+
+      - name: Set Next Development Version in POM
+        run: |
+          mvn versions:set -DnewVersion="${{ steps.get_version.outputs.RELEASE_VERSION }}-SNAPSHOT"
+          git commit -am "Set next development version to ${{ steps.get_version.outputs.RELEASE_VERSION }}-SNAPSHOT"
+
+      - name: Push Changes
+        run: git push origin main develop # Ou as branches relevantes
