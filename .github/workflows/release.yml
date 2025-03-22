@@ -3,7 +3,10 @@ name: Release Automation
 on:
   push:
     branches:
-      - 'release/*' # Dispara quando uma branch release é criada ou recebe push
+      - 'release/*'
+
+permissions:
+  contents: write
 
 jobs:
   release:
